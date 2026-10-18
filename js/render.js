@@ -341,29 +341,31 @@ function renderTable(players, columns) {
       ? GAMEMODES.filter((gm) => player.tiers[gm.id])
           .map((gm) => {
             const tier = player.tiers[gm.id];
-            return `
-              <div class="mini-tier-item" title="${gm.label}: ${tier}">
-                <span class="mini-tier-badge">
-                  ${gm.icon ? `<img src="${gm.icon}" alt="" class="mini-tier-icon" />` : ""}
-                </span>
-                <span class="mini-tier-label" style="color:${tierColor(tier)}">${tier}</span>
-              </div>
-            `;
+            const color = tierColor(tier);
+            return `<span class="tier-chip" style="--tc:${color}" title="${gm.label}: ${tier}">${gm.icon ? `<img src="${gm.icon}" alt="" class="tier-chip-icon">` : ""}<span class="tier-chip-name">${gm.label}</span><span class="tier-chip-val">${tier}</span></span>`;
           })
           .join("")
       : "";
 
+    const rankEl = rank <= 3
+      ? `<span class="rank-medal rank-medal-${rank}">${rank}</span>`
+      : rank;
+
+    const valueEl = showTiers
+      ? value
+      : `<span class="solo-tier-badge" style="--tc:${tierColor(value)}">${value}</span>`;
+
     tr.innerHTML = `
-      <td>${rank}</td>
+      <td>${rankEl}</td>
       <td>
         <button class="player-link" data-player="${safeName}">
-          <img src="${headUrl(player.name, 24)}" alt="" class="player-head" loading="lazy" />
+          <img src="${headUrl(player.name, 36)}" alt="" class="player-head" loading="lazy" />
           <span>${safeName}</span>
         </button>
       </td>
       <td>${player.region}</td>
-      <td>${value}</td>
-      ${showTiers ? `<td><div class="mini-tier-row">${tierBadges}</div></td>` : ""}
+      <td>${valueEl}</td>
+      ${showTiers ? `<td><div class="tier-chip-row">${tierBadges}</div></td>` : ""}
     `;
     tbody.appendChild(tr);
   });
