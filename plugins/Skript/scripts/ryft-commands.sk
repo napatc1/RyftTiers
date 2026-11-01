@@ -4,11 +4,11 @@
 # ── Server gamerules on script load ──────────────────────────────────────────
 on script load:
     loop all worlds:
-        set game rule "doDaylightCycle" of loop-world to false
-        set game rule "doWeatherCycle" of loop-world to false
-        set game rule "doMobSpawning" of loop-world to false
-        set time of loop-world to 6000
-        set weather of loop-world to clear
+        set game rule "advance_time" of loop-world to false
+        set game rule "advance_weather" of loop-world to false
+        set game rule "spawn_mobs" of loop-world to false
+        execute console command "minecraft:time set 6000"
+        execute console command "minecraft:weather clear"
 
 # ── /ping ────────────────────────────────────────────────────────────────────
 command /ping [<player>]:
@@ -245,6 +245,20 @@ command /sdk <text>:
             send "&8[&5SDK&8] &aSaved default kit for &f%{_kit}%&a. Players start with this kit and can add more items."
         else:
             send "&8[&5SDK&8] &aSaved inventory as &f%{_kit}% &akit. Players receive this kit locked."
+
+# ── /clearmobs ────────────────────────────────────────────────────────────────
+command /clearmobs:
+    description: Kill all mobs in every world (preserves players, armor stands, and bots)
+    permission: op
+    trigger:
+        set {_count} to 0
+        loop all entities in all worlds:
+            if loop-entity is not a player:
+                if loop-entity is not an armor stand:
+                    if {bots::%uuid of loop-entity%} is not set:
+                        kill loop-entity
+                        add 1 to {_count}
+        send "&8[&5RyftTiers&8] &aCleared &f%{_count}% &amobs."
 
 # ── /testermode ───────────────────────────────────────────────────────────────
 command /testermode:
