@@ -3,11 +3,12 @@
 
 # ── Server gamerules on script load ──────────────────────────────────────────
 on script load:
-    execute console command "gamerule doDaylightCycle false"
-    execute console command "gamerule doWeatherCycle false"
-    execute console command "gamerule doMobSpawning false"
-    execute console command "time set 6000"
-    execute console command "weather clear"
+    loop all worlds:
+        set game rule "doDaylightCycle" of loop-world to false
+        set game rule "doWeatherCycle" of loop-world to false
+        set game rule "doMobSpawning" of loop-world to false
+        set time of loop-world to 6000
+        set weather of loop-world to clear
 
 # ── /ping ────────────────────────────────────────────────────────────────────
 command /ping [<player>]:
