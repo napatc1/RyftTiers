@@ -96,7 +96,11 @@ command /tiertest <player> [<text>]:
             set {_kit} to "mace"
             set {_label} to "Mace"
             set {_rounds} to 3
-        else if {_mode} is "spear-mace" or {_mode} is "spearmace":
+        else if {_mode} is "spear-mace":
+            set {_kit} to "spear-mace"
+            set {_label} to "Spear Mace"
+            set {_rounds} to 3
+        else if {_mode} is "spearmace":
             set {_kit} to "spear-mace"
             set {_label} to "Spear Mace"
             set {_rounds} to 3
@@ -140,7 +144,7 @@ command /tiertest <player> [<text>]:
             delete {tiertest.rounds::%uuid of {_target}%}
             if {_target} is online:
                 if player is online:
-                    execute player command "duel %{_target}% %{_kit}%"
+                    startDuelNow("%uuid of player%", "%uuid of {_target}%", player, {_target}, {_kit}, {_label}, {_rounds}, true)
                     send "&8[&5Tier Test&8] &aStarting &f%{_label}% &atest vs &e%{_target}%&a! (%{_rounds}% rounds)"
                     send "&8[&5Tier Test&8] &aTier test starting — &f%{_label}% &a(%{_rounds}% rounds) vs &e%player%&a." to {_target}
                 else:
@@ -209,63 +213,11 @@ on gamemode change:
                 delete {tiertest.rounds::%uuid of player%}
                 if player is online:
                     if {_tester} is online:
-                        execute {_tester} command "duel %player% %{_kit}%"
+                        startDuelNow("%uuid of {_tester}%", "%uuid of player%", {_tester}, player, {_kit}, {_label}, {_rounds}, true)
                         send "&8[&5Tier Test&8] &aStarting &f%{_label}% &atest vs &e%player%&a! (%{_rounds}% rounds)" to {_tester}
                         send "&8[&5Tier Test&8] &aTier test starting — &f%{_label}% &a(%{_rounds}% rounds) vs &e%{_tester}%&a." to player
                     else:
                         send "&8[&5Tier Test&8] &cTester went offline. Test cancelled." to player
-
-# ── /sdk ──────────────────────────────────────────────────────────────────────
-command /sdk <text>:
-    description: Save your current inventory as the default kit for a gamemode
-    permission: ryft.tester
-    trigger:
-        if gamemode of player is not creative:
-            send "&8[&5SDK&8] &cYou must be in &fCreative &cmode to save a kit."
-            stop
-        set {_gm} to arg-1
-        if {_gm} is "free":
-            set {_kit} to "vanilla-free"
-            set {_cpvp} to true
-        else if {_gm} is "eval":
-            set {_kit} to "vanilla-eval"
-            set {_cpvp} to true
-        else if {_gm} is "drain":
-            set {_kit} to "vanilla-drain"
-            set {_cpvp} to true
-        else if {_gm} is "uhc":
-            set {_kit} to "uhc"
-            set {_cpvp} to false
-        else if {_gm} is "sword":
-            set {_kit} to "sword"
-            set {_cpvp} to false
-        else if {_gm} is "axe":
-            set {_kit} to "axe"
-            set {_cpvp} to false
-        else if {_gm} is "nethpot":
-            set {_kit} to "nethpot"
-            set {_cpvp} to false
-        else if {_gm} is "mace":
-            set {_kit} to "mace"
-            set {_cpvp} to false
-        else if {_gm} is "spear-mace" or {_gm} is "spearmace":
-            set {_kit} to "spear-mace"
-            set {_cpvp} to false
-        else if {_gm} is "smp":
-            set {_kit} to "smp"
-            set {_cpvp} to false
-        else if {_gm} is "cart":
-            set {_kit} to "cart"
-            set {_cpvp} to false
-        else:
-            send "&8[&5SDK&8] &cUnknown gamemode &e'%{_gm}%'&c."
-            send "&7Valid: &efree&7, &eeval&7, &edrain&7, &euhc&7, &esword&7, &eaxe&7, &enethpot&7, &emace&7, &espear-mace&7, &esmp&7, &ecart"
-            stop
-        execute player command "duel savekit %{_kit}%"
-        if {_cpvp} is true:
-            send "&8[&5SDK&8] &aSaved default kit for &f%{_kit}%&a. Players start with this kit and can add more items."
-        else:
-            send "&8[&5SDK&8] &aSaved inventory as &f%{_kit}% &akit. Players receive this kit locked."
 
 # ── /clearmobs ────────────────────────────────────────────────────────────────
 command /clearmobs:
@@ -358,7 +310,10 @@ command /spawnbot [<integer>]:
     permission: ryft.tester
     trigger:
         set {_d} to arg-1 ? 3
-        if {_d} < 1 or {_d} > 5:
+        if {_d} < 1:
+            send "&cUsage: /spawnbot [1-5]  &8(1 = easiest, 5 = hardest)"
+            stop
+        if {_d} > 5:
             send "&cUsage: /spawnbot [1-5]  &8(1 = easiest, 5 = hardest)"
             stop
         spawn zombie at location 2 in front of player
