@@ -3,7 +3,7 @@
 
 # ── /testerkit ───────────────────────────────────────────────────────────────
 command /testerkit:
-    description: Give yourself unbreakable Prot 4 diamond helmet and chestplate
+    description: Give yourself unbreakable diamond armor (Prot 4/4/3/3)
     permission: ryft.tester
     permission message: "&cYou don't have permission to use this."
     trigger:
@@ -13,9 +13,17 @@ command /testerkit:
         set {_chest} to diamond chestplate
         enchant {_chest} with protection 4
         set unbreakable of {_chest} to true
+        set {_legs} to diamond leggings
+        enchant {_legs} with protection 3
+        set unbreakable of {_legs} to true
+        set {_boots} to diamond boots
+        enchant {_boots} with protection 3
+        set unbreakable of {_boots} to true
         set helmet of player to {_helm}
         set chestplate of player to {_chest}
-        send "&8[&5RyftTiers&8] &aGiven unbreakable Prot 4 diamond helmet and chestplate."
+        set leggings of player to {_legs}
+        set boots of player to {_boots}
+        send "&8[&5RyftTiers&8] &aGiven full unbreakable diamond armor (Prot 4/4/3/3)."
 
 # ── Server gamerules on script load ──────────────────────────────────────────
 on script load:
