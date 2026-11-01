@@ -3,9 +3,8 @@
 
 # ── /testerkit ───────────────────────────────────────────────────────────────
 command /testerkit:
-    description: Give yourself unbreakable diamond armor (Prot 4/4/3/3)
+    description: Give yourself unbreakable Prot 4 diamond helmet and chestplate
     permission: ryft.tester
-    permission message: "&cYou don't have permission to use this."
     trigger:
         set {_helm} to diamond helmet
         enchant {_helm} with protection 4
@@ -50,7 +49,6 @@ command /ping [<player>]:
 command /tiertest <player> [<text>]:
     description: Send a tier test duel request to a player
     permission: ryft.tester
-    permission message: "&cYou don't have permission to run tier tests."
     trigger:
         set {_target} to arg-1
         set {_mode} to arg-2 ? "eval"
@@ -221,7 +219,6 @@ on gamemode change:
 command /sdk <text>:
     description: Save your current inventory as the default kit for a gamemode
     permission: ryft.tester
-    permission message: "&cYou don't have permission to save kits."
     trigger:
         if gamemode of player is not creative:
             send "&8[&5SDK&8] &cYou must be in &fCreative &cmode to save a kit."
@@ -311,7 +308,7 @@ function equipBot(e: entity, d: number):
     set chestplate of {_e} to air
     set leggings of {_e} to air
     set boots of {_e} to air
-    set item in main hand of {_e} to air
+    set {_e}'s tool to air
     remove all potion effects from {_e}
     if {_d} is 1:
         set helmet of {_e} to leather helmet
@@ -323,26 +320,26 @@ function equipBot(e: entity, d: number):
         set chestplate of {_e} to iron chestplate
         set leggings of {_e} to iron leggings
         set boots of {_e} to iron boots
-        set item in main hand of {_e} to iron sword
+        set {_e}'s tool to iron sword
     else if {_d} is 3:
         set helmet of {_e} to diamond helmet
         set chestplate of {_e} to diamond chestplate
         set leggings of {_e} to diamond leggings
         set boots of {_e} to diamond boots
-        set item in main hand of {_e} to diamond sword
+        set {_e}'s tool to diamond sword
     else if {_d} is 4:
         set helmet of {_e} to diamond helmet
         set chestplate of {_e} to diamond chestplate
         set leggings of {_e} to diamond leggings
         set boots of {_e} to diamond boots
-        set item in main hand of {_e} to diamond sword
+        set {_e}'s tool to diamond sword
         apply speed 1 to {_e} for 99999 seconds
     else if {_d} is 5:
         set helmet of {_e} to netherite helmet
         set chestplate of {_e} to netherite chestplate
         set leggings of {_e} to netherite leggings
         set boots of {_e} to netherite boots
-        set item in main hand of {_e} to netherite sword
+        set {_e}'s tool to netherite sword
         apply speed 2 to {_e} for 99999 seconds
         apply strength 1 to {_e} for 99999 seconds
 
@@ -359,7 +356,6 @@ function setBotDiff(p: player, uid: text, d: number):
 command /spawnbot [<integer>]:
     description: Spawn a practice bot at difficulty 1-5
     permission: ryft.tester
-    permission message: "&cNo permission to spawn bots."
     trigger:
         set {_d} to arg-1 ? 3
         if {_d} < 1 or {_d} > 5:
