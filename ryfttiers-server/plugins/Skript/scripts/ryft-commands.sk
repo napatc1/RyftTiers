@@ -1,0 +1,414 @@
+# RyftTiers custom commands
+# Requires: Skript 2.17+
+
+# ── /testerkit ───────────────────────────────────────────────────────────────
+command /testerkit:
+    description: Give yourself unbreakable Prot 4 diamond helmet and chestplate
+    permission: ryft.tester
+    permission message: "&cYou don't have permission to use this."
+    trigger:
+        set {_helm} to diamond helmet
+        enchant {_helm} with protection 4
+        set unbreakable of {_helm} to true
+        set {_chest} to diamond chestplate
+        enchant {_chest} with protection 4
+        set unbreakable of {_chest} to true
+        set helmet of player to {_helm}
+        set chestplate of player to {_chest}
+        send "&8[&5RyftTiers&8] &aGiven unbreakable Prot 4 diamond helmet and chestplate."
+
+# ── Server gamerules on script load ──────────────────────────────────────────
+on script load:
+    loop all worlds:
+        set game rule "advance_time" of loop-world to false
+        set game rule "advance_weather" of loop-world to false
+        set game rule "spawn_mobs" of loop-world to false
+        execute console command "minecraft:time set 6000"
+        execute console command "minecraft:weather clear"
+
+# ── /ping ────────────────────────────────────────────────────────────────────
+command /ping [<player>]:
+    description: Show ping (your own or another player's)
+    trigger:
+        if arg-1 is not set:
+            send "&8[&5RyftTiers&8] &7Your ping: &f%player's ping%ms"
+            stop
+        if arg-1 is not online:
+            send "&cPlayer &e%arg-1%&c is not online."
+            stop
+        send "&8[&5RyftTiers&8] &e%arg-1%&7's ping: &f%ping of arg-1%ms"
+
+# ── /tiertest ────────────────────────────────────────────────────────────────
+command /tiertest <player> [<text>]:
+    description: Send a tier test duel request to a player
+    permission: ryft.tester
+    permission message: "&cYou don't have permission to run tier tests."
+    trigger:
+        set {_target} to arg-1
+        set {_mode} to arg-2 ? "eval"
+        if {_target} is not online:
+            send "&cPlayer &e%arg-1%&c is not online."
+            stop
+        if {_target} is player:
+            send "&cYou can't test yourself."
+            stop
+        if {tiertest.requester::%uuid of {_target}%} is set:
+            send "&c%{_target}% already has a pending tier test. Wait for it to resolve."
+            stop
+        if {tiertest.queued.requester::%uuid of {_target}%} is set:
+            send "&c%{_target}% already has a queued tier test."
+            stop
+        if {_mode} is "eval":
+            set {_kit} to "vanilla-eval"
+            set {_label} to "Vanilla Eval"
+            set {_rounds} to 3
+        else if {_mode} is "drain":
+            set {_kit} to "vanilla-drain"
+            set {_label} to "Vanilla Drain"
+            set {_rounds} to 3
+        else if {_mode} is "free":
+            set {_kit} to "vanilla-free"
+            set {_label} to "Vanilla Free"
+            set {_rounds} to 3
+        else if {_mode} is "uhc":
+            set {_kit} to "uhc"
+            set {_label} to "UHC"
+            set {_rounds} to 2
+        else if {_mode} is "sword":
+            set {_kit} to "sword"
+            set {_label} to "Sword"
+            set {_rounds} to 3
+        else if {_mode} is "axe":
+            set {_kit} to "axe"
+            set {_label} to "Axe"
+            set {_rounds} to 3
+        else if {_mode} is "nethpot":
+            set {_kit} to "nethpot"
+            set {_label} to "NethPot"
+            set {_rounds} to 3
+        else if {_mode} is "mace":
+            set {_kit} to "mace"
+            set {_label} to "Mace"
+            set {_rounds} to 3
+        else if {_mode} is "spear-mace" or {_mode} is "spearmace":
+            set {_kit} to "spear-mace"
+            set {_label} to "Spear Mace"
+            set {_rounds} to 3
+        else if {_mode} is "smp":
+            set {_kit} to "smp"
+            set {_label} to "SMP"
+            set {_rounds} to 3
+        else if {_mode} is "cart":
+            set {_kit} to "cart"
+            set {_label} to "Cart"
+            set {_rounds} to 3
+        else:
+            send "&cUnknown gamemode &e'%{_mode}%'&c."
+            send "&7Valid: &eeval&7, &edrain&7, &efree&7, &euhc&7, &esword&7, &eaxe&7, &enethpot&7, &emace&7, &espear-mace&7, &esmp&7, &ecart"
+            stop
+        if gamemode of {_target} is survival:
+            set {tiertest.queued.requester::%uuid of {_target}%} to player
+            set {tiertest.queued.kit::%uuid of {_target}%} to {_kit}
+            set {tiertest.queued.label::%uuid of {_target}%} to {_label}
+            set {tiertest.queued.rounds::%uuid of {_target}%} to {_rounds}
+            send "&8[&5Tier Test&8] &e%{_target}% &7is in a duel. Test queued — they get 10s to cancel when they return."
+            send "&8[&5Tier Test&8] &e%player% &7queued a &a%{_label}% &7tier test for you. You'll have 10s to &c/canceltest &7when you return to lobby." to {_target}
+            stop
+        set {tiertest.requester::%uuid of {_target}%} to player
+        set {tiertest.kit::%uuid of {_target}%} to {_kit}
+        set {tiertest.label::%uuid of {_target}%} to {_label}
+        set {tiertest.rounds::%uuid of {_target}%} to {_rounds}
+        send "&8[&5Tier Test&8] &7Sent &a%{_label}% &7test to &e%{_target}%&7. Starts in 10s unless they cancel..."
+        send "" to {_target}
+        send "&8[&5Tier Test&8] &c&lTIER TEST REQUEST" to {_target}
+        send "&8[&5Tier Test&8] &e%player% &7wants to tier test you!" to {_target}
+        send "&8[&5Tier Test&8] &7Gamemode: &a%{_label}% &8(%{_rounds}% rounds&8)" to {_target}
+        send "&8[&5Tier Test&8] &7Run &c/canceltest &7within &c10 seconds &7to decline." to {_target}
+        send "&8[&5Tier Test&8] &7Otherwise the duel will start automatically." to {_target}
+        send "" to {_target}
+        wait 10 seconds
+        if {tiertest.requester::%uuid of {_target}%} is set:
+            delete {tiertest.requester::%uuid of {_target}%}
+            delete {tiertest.kit::%uuid of {_target}%}
+            delete {tiertest.label::%uuid of {_target}%}
+            delete {tiertest.rounds::%uuid of {_target}%}
+            if {_target} is online:
+                if player is online:
+                    execute player command "duel %{_target}% %{_kit}%"
+                    send "&8[&5Tier Test&8] &aStarting &f%{_label}% &atest vs &e%{_target}%&a! (%{_rounds}% rounds)"
+                    send "&8[&5Tier Test&8] &aTier test starting — &f%{_label}% &a(%{_rounds}% rounds) vs &e%player%&a." to {_target}
+                else:
+                    send "&8[&5Tier Test&8] &cTester went offline. Test cancelled." to {_target}
+            else:
+                send "&8[&5Tier Test&8] &e%{_target}% &cwent offline. Test cancelled."
+
+# ── /canceltest ───────────────────────────────────────────────────────────────
+command /canceltest:
+    description: Cancel a pending or queued tier test within 10 seconds of receiving it
+    trigger:
+        if {tiertest.requester::%uuid of player%} is set:
+            set {_tester} to {tiertest.requester::%uuid of player%}
+            set {_label}  to {tiertest.label::%uuid of player%}
+            delete {tiertest.requester::%uuid of player%}
+            delete {tiertest.kit::%uuid of player%}
+            delete {tiertest.label::%uuid of player%}
+            delete {tiertest.rounds::%uuid of player%}
+            send "&8[&5Tier Test&8] &cYou cancelled the &a%{_label}% &ctier test."
+            if {_tester} is online:
+                send "&8[&5Tier Test&8] &e%player% &cdeclined the &a%{_label}% &ctier test." to {_tester}
+        else if {tiertest.queued.requester::%uuid of player%} is set:
+            set {_tester} to {tiertest.queued.requester::%uuid of player%}
+            set {_label}  to {tiertest.queued.label::%uuid of player%}
+            delete {tiertest.queued.requester::%uuid of player%}
+            delete {tiertest.queued.kit::%uuid of player%}
+            delete {tiertest.queued.label::%uuid of player%}
+            delete {tiertest.queued.rounds::%uuid of player%}
+            send "&8[&5Tier Test&8] &cYou cancelled the queued &a%{_label}% &ctier test."
+            if {_tester} is online:
+                send "&8[&5Tier Test&8] &e%player% &cdeclined the queued &a%{_label}% &ctier test." to {_tester}
+        else:
+            send "&8[&5Tier Test&8] &cYou have no pending tier test to cancel."
+
+# ── Queued test trigger on gamemode change ───────────────────────────────────
+on gamemode change:
+    if future gamemode of player is adventure:
+        wait 1 second
+        if {tiertest.queued.requester::%uuid of player%} is set:
+            set {_tester}  to {tiertest.queued.requester::%uuid of player%}
+            set {_kit}     to {tiertest.queued.kit::%uuid of player%}
+            set {_label}   to {tiertest.queued.label::%uuid of player%}
+            set {_rounds}  to {tiertest.queued.rounds::%uuid of player%}
+            delete {tiertest.queued.requester::%uuid of player%}
+            delete {tiertest.queued.kit::%uuid of player%}
+            delete {tiertest.queued.label::%uuid of player%}
+            delete {tiertest.queued.rounds::%uuid of player%}
+            if {_tester} is not online:
+                send "&8[&5Tier Test&8] &cQueued tier test cancelled — tester went offline."
+                stop
+            set {tiertest.requester::%uuid of player%} to {_tester}
+            set {tiertest.kit::%uuid of player%}       to {_kit}
+            set {tiertest.label::%uuid of player%}     to {_label}
+            set {tiertest.rounds::%uuid of player%}    to {_rounds}
+            send "" to player
+            send "&8[&5Tier Test&8] &c&lQUEUED TIER TEST — YOU'RE BACK" to player
+            send "&8[&5Tier Test&8] &e%{_tester}% &7queued a &a%{_label}% &7test while you were in a duel." to player
+            send "&8[&5Tier Test&8] &7Gamemode: &a%{_label}% &8(%{_rounds}% rounds&8)" to player
+            send "&8[&5Tier Test&8] &7Run &c/canceltest &7within &c10 seconds &7to decline." to player
+            send "" to player
+            wait 10 seconds
+            if {tiertest.requester::%uuid of player%} is set:
+                delete {tiertest.requester::%uuid of player%}
+                delete {tiertest.kit::%uuid of player%}
+                delete {tiertest.label::%uuid of player%}
+                delete {tiertest.rounds::%uuid of player%}
+                if player is online:
+                    if {_tester} is online:
+                        execute {_tester} command "duel %player% %{_kit}%"
+                        send "&8[&5Tier Test&8] &aStarting &f%{_label}% &atest vs &e%player%&a! (%{_rounds}% rounds)" to {_tester}
+                        send "&8[&5Tier Test&8] &aTier test starting — &f%{_label}% &a(%{_rounds}% rounds) vs &e%{_tester}%&a." to player
+                    else:
+                        send "&8[&5Tier Test&8] &cTester went offline. Test cancelled." to player
+
+# ── /sdk ──────────────────────────────────────────────────────────────────────
+command /sdk <text>:
+    description: Save your current inventory as the default kit for a gamemode
+    permission: ryft.tester
+    permission message: "&cYou don't have permission to save kits."
+    trigger:
+        if gamemode of player is not creative:
+            send "&8[&5SDK&8] &cYou must be in &fCreative &cmode to save a kit."
+            stop
+        set {_gm} to arg-1
+        if {_gm} is "free":
+            set {_kit} to "vanilla-free"
+            set {_cpvp} to true
+        else if {_gm} is "eval":
+            set {_kit} to "vanilla-eval"
+            set {_cpvp} to true
+        else if {_gm} is "drain":
+            set {_kit} to "vanilla-drain"
+            set {_cpvp} to true
+        else if {_gm} is "uhc":
+            set {_kit} to "uhc"
+            set {_cpvp} to false
+        else if {_gm} is "sword":
+            set {_kit} to "sword"
+            set {_cpvp} to false
+        else if {_gm} is "axe":
+            set {_kit} to "axe"
+            set {_cpvp} to false
+        else if {_gm} is "nethpot":
+            set {_kit} to "nethpot"
+            set {_cpvp} to false
+        else if {_gm} is "mace":
+            set {_kit} to "mace"
+            set {_cpvp} to false
+        else if {_gm} is "spear-mace" or {_gm} is "spearmace":
+            set {_kit} to "spear-mace"
+            set {_cpvp} to false
+        else if {_gm} is "smp":
+            set {_kit} to "smp"
+            set {_cpvp} to false
+        else if {_gm} is "cart":
+            set {_kit} to "cart"
+            set {_cpvp} to false
+        else:
+            send "&8[&5SDK&8] &cUnknown gamemode &e'%{_gm}%'&c."
+            send "&7Valid: &efree&7, &eeval&7, &edrain&7, &euhc&7, &esword&7, &eaxe&7, &enethpot&7, &emace&7, &espear-mace&7, &esmp&7, &ecart"
+            stop
+        execute player command "duel savekit %{_kit}%"
+        if {_cpvp} is true:
+            send "&8[&5SDK&8] &aSaved default kit for &f%{_kit}%&a. Players start with this kit and can add more items."
+        else:
+            send "&8[&5SDK&8] &aSaved inventory as &f%{_kit}% &akit. Players receive this kit locked."
+
+# ── /clearmobs ────────────────────────────────────────────────────────────────
+command /clearmobs:
+    description: Kill all mobs in every world (preserves players, armor stands, and bots)
+    permission: op
+    trigger:
+        set {_count} to 0
+        loop all entities in all worlds:
+            if loop-entity is not a player:
+                if loop-entity is not an armor stand:
+                    if {bots::%uuid of loop-entity%} is not set:
+                        kill loop-entity
+                        add 1 to {_count}
+        send "&8[&5RyftTiers&8] &aCleared &f%{_count}% &amobs."
+
+# ── /testermode ───────────────────────────────────────────────────────────────
+command /testermode:
+    description: Toggle between spectator and adventure mode (testers only)
+    permission: ryft.tester
+    trigger:
+        if gamemode of player is spectator:
+            set gamemode of player to adventure
+            send "&8[&5RyftTiers&8] &aSwitched to &fAdventure&a mode."
+        else:
+            set gamemode of player to spectator
+            send "&8[&5RyftTiers&8] &aSwitched to &fSpectator&a mode."
+
+# ── Practice Bots ─────────────────────────────────────────────────────────────
+# /spawnbot [1-5] — spawns zombie bot at the given difficulty
+# Shift+right-click the bot to open a GUI to change difficulty or remove it
+# Difficulty levels:
+#   1 — Leather armor, unarmed
+#   2 — Iron armor + iron sword
+#   3 — Diamond armor + diamond sword
+#   4 — Diamond armor + diamond sword + Speed I
+#   5 — Netherite armor + netherite sword + Speed II + Strength I
+
+function equipBot(e: entity, d: number):
+    set helmet of {_e} to air
+    set chestplate of {_e} to air
+    set leggings of {_e} to air
+    set boots of {_e} to air
+    set item in main hand of {_e} to air
+    remove all potion effects from {_e}
+    if {_d} is 1:
+        set helmet of {_e} to leather helmet
+        set chestplate of {_e} to leather chestplate
+        set leggings of {_e} to leather leggings
+        set boots of {_e} to leather boots
+    else if {_d} is 2:
+        set helmet of {_e} to iron helmet
+        set chestplate of {_e} to iron chestplate
+        set leggings of {_e} to iron leggings
+        set boots of {_e} to iron boots
+        set item in main hand of {_e} to iron sword
+    else if {_d} is 3:
+        set helmet of {_e} to diamond helmet
+        set chestplate of {_e} to diamond chestplate
+        set leggings of {_e} to diamond leggings
+        set boots of {_e} to diamond boots
+        set item in main hand of {_e} to diamond sword
+    else if {_d} is 4:
+        set helmet of {_e} to diamond helmet
+        set chestplate of {_e} to diamond chestplate
+        set leggings of {_e} to diamond leggings
+        set boots of {_e} to diamond boots
+        set item in main hand of {_e} to diamond sword
+        apply speed 1 to {_e} for 99999 seconds
+    else if {_d} is 5:
+        set helmet of {_e} to netherite helmet
+        set chestplate of {_e} to netherite chestplate
+        set leggings of {_e} to netherite leggings
+        set boots of {_e} to netherite boots
+        set item in main hand of {_e} to netherite sword
+        apply speed 2 to {_e} for 99999 seconds
+        apply strength 1 to {_e} for 99999 seconds
+
+function setBotDiff(p: player, uid: text, d: number):
+    set {bots::%{_uid}%} to {_d}
+    loop all entities:
+        if "%uuid of loop-entity%" is {_uid}:
+            set name of loop-entity to "&7[&cBot &8D%{_d}%&7]"
+            equipBot(loop-entity, {_d})
+    close inventory of {_p}
+    delete {botmenu::%uuid of {_p}%}
+    send "&8[&5RyftTiers&8] &aBot difficulty set to &fDiff %{_d}%." to {_p}
+
+command /spawnbot [<integer>]:
+    description: Spawn a practice bot at difficulty 1-5
+    permission: ryft.tester
+    permission message: "&cNo permission to spawn bots."
+    trigger:
+        set {_d} to arg-1 ? 3
+        if {_d} < 1 or {_d} > 5:
+            send "&cUsage: /spawnbot [1-5]  &8(1 = easiest, 5 = hardest)"
+            stop
+        spawn zombie at location 2 in front of player
+        set {_bot} to last spawned entity
+        set name of {_bot} to "&7[&cBot &8D%{_d}%&7]"
+        set max health of {_bot} to 20
+        heal {_bot}
+        equipBot({_bot}, {_d})
+        set {bots::%uuid of {_bot}%} to {_d}
+        send "&8[&5RyftTiers&8] &aSpawned Diff &f%{_d}% &abot. &7Shift+right-click to configure."
+
+on right click on entity:
+    if player is sneaking:
+        if {bots::%uuid of clicked entity%} is set:
+            cancel event
+            set {botmenu::%uuid of player%} to "%uuid of clicked entity%"
+            set {_d} to {bots::%uuid of clicked entity%}
+            open virtual chest inventory with 1 row named "&5Bot Config" to player
+            set slot 0 of player's current inventory to lime wool named "&a[1] Beginner &8(Leather)"
+            set slot 1 of player's current inventory to yellow wool named "&e[2] Easy &8(Iron)"
+            set slot 2 of player's current inventory to orange wool named "&6[3] Medium &8(Diamond)"
+            set slot 3 of player's current inventory to red wool named "&c[4] Hard &8(Diamond + Speed)"
+            set slot 4 of player's current inventory to magenta wool named "&d[5] Expert &8(Netherite++)"
+            set slot 6 of player's current inventory to nether star named "&7Current: &fDiff %{_d}%"
+            set slot 8 of player's current inventory to barrier named "&c[X] Remove Bot"
+
+on inventory click:
+    if name of player's current inventory is "&5Bot Config":
+        cancel event
+        set {_uid} to {botmenu::%uuid of player%}
+        if {_uid} is not set:
+            stop
+        if type of event-item is lime wool:
+            setBotDiff(player, {_uid}, 1)
+        else if type of event-item is yellow wool:
+            setBotDiff(player, {_uid}, 2)
+        else if type of event-item is orange wool:
+            setBotDiff(player, {_uid}, 3)
+        else if type of event-item is red wool:
+            setBotDiff(player, {_uid}, 4)
+        else if type of event-item is magenta wool:
+            setBotDiff(player, {_uid}, 5)
+        else if type of event-item is barrier:
+            loop all entities:
+                if "%uuid of loop-entity%" is {_uid}:
+                    delete {bots::%{_uid}%}
+                    kill loop-entity
+            close player's inventory
+            delete {botmenu::%uuid of player%}
+            send "&8[&5RyftTiers&8] &cBot removed."
+        else:
+            close player's inventory
+            delete {botmenu::%uuid of player%}
+
+on inventory close:
+    if name of player's current inventory is "&5Bot Config":
+        delete {botmenu::%uuid of player%}
