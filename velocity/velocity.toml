@@ -1,0 +1,48 @@
+# Velocity Proxy Config for RyftPvP
+# Version: 3.3.0
+
+config-version = "2.7"
+
+# External address players connect to
+bind = "0.0.0.0:25565"
+
+motd = "&5&lRyftPvP &7| &fPractice"
+
+show-max-players = 500
+
+online-mode = true
+
+force-key-authentication = true
+
+prevents-client-proxy-connections = false
+
+player-info-forwarding-mode = "MODERN"
+
+forwarding-secret-file = "forwarding.secret"
+
+anonymous-ban-reason = true
+
+[servers]
+hub = "127.0.0.1:25566"
+practice = "127.0.0.1:25567"
+
+[forced-hosts]
+
+[try]
+try = ["hub"]
+
+[advanced]
+compression-threshold = 256
+compression-level = -1
+login-ratelimit = 3000
+connection-timeout = 5000
+read-timeout = 30000
+haproxy-protocol = false
+tcp-fast-open = false
+big-player-count-threshold = 200
+
+[query]
+enabled = false
+port = 25577
+map = "RyftPvP"
+show-plugins = false
